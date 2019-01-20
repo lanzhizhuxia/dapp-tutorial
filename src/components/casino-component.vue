@@ -1,19 +1,13 @@
 <template>
   <div class="casino container">
     <h1>Welcome to the Casino</h1>
-    <h4>Please pick a number between 1 and 10</h4>
+    <h4>您拥有的卡的数量：{{ balanceCard }}</h4>
     Amount to bet: <input v-model="amount" placeholder="0 Ether">
     <ul>
-      <li v-on:click="clickNumber">1</li>
-      <li v-on:click="clickNumber">2</li>
-      <li v-on:click="clickNumber">3</li>
-      <li v-on:click="clickNumber">4</li>
-      <li v-on:click="clickNumber">5</li>
-      <li v-on:click="clickNumber">6</li>
-      <li v-on:click="clickNumber">7</li>
-      <li v-on:click="clickNumber">8</li>
-      <li v-on:click="clickNumber">9</li>
-      <li v-on:click="clickNumber">10</li>
+      <li v-on:click="mintBlue">购买蓝色卡</li>
+      <li v-on:click="mintRed">购买红色卡</li>
+      <li v-on:click="test">购买绿色卡</li>
+
     </ul>
     <img v-if="pending" id="loader" src="https://loading.io/spinners/double-ring/lg.double-ring-spinner.gif">
     <div class="event" v-if="winEvent">
@@ -24,16 +18,95 @@
 </template>
 
 <script>
+import {store} from '../store/'
 export default {
   name: 'casino',
   data () {
     return {
       amount: null,
       pending: false,
-      winEvent: null
+      winEvent: null,
+      balanceCard: 0
     }
   },
   methods: {
+    mintBlue (event) {
+      console.log('mintBlue', event.target.innerHTML)
+      this.winEvent = null
+      this.pending = true
+      this.$store.state.contractInstance().mintBlue({
+        gas: 300000,
+        value: this.$store.state.web3.web3Instance().toWei(0.1, 'ether'),
+        from: this.$store.state.web3.coinbase
+      }, (err, result) => {
+        if (err) {
+          console.log(err)
+          this.pending = false
+        } else {
+          let balanceOf = this.$store.state.contractInstance().balanceOf(store.state.web3.coinbase, {
+            gas: 300000,
+            value: this.$store.state.web3.web3Instance().toWei(this.amount, 'ether'),
+            from: this.$store.state.web3.coinbase
+          })
+          balanceOf.watch((err, result) => {
+            if (err) {
+              console.log('could not get event balanceCard()')
+            } else {
+              this.balanceCard = result.args
+              // this.winEvent._amount = parseInt(result.args._amount, 10)
+              this.pending = false
+            }
+          })
+        }
+      })
+    },
+    mintRed (event) {
+      console.log('mintRed', event.target.innerHTML)
+      this.winEvent = null
+      this.pending = true
+      this.$store.state.contractInstance().mintRed({
+        gas: 300000,
+        value: this.$store.state.web3.web3Instance().toWei(0.1, 'ether'),
+        from: this.$store.state.web3.coinbase
+      }, (err, result) => {
+        if (err) {
+          console.log(err)
+          this.pending = false
+        }
+      })
+    },
+    test (event) {
+      console.log('test', event.target.innerHTML)
+      this.winEvent = null
+      this.pending = true
+      this.balanceCard = 1111
+      let balanceOf = this.$store.state.contractInstance().getContractBalanceOf()
+
+      balanceOf.watch((err, result) => {
+        if (err) {
+          console.log('could not get event balanceCard()')
+        } else {
+          this.balanceCard = result.args
+          // this.winEvent._amount = parseInt(result.args._amount, 10)
+          this.pending = false
+        }
+      })
+    },
+    mintGrenn (event) {
+      console.log('mintGrenn', event.target.innerHTML)
+      this.winEvent = null
+      this.pending = true
+      this.$store.state.contractInstance().mintGrenn({
+        gas: 300000,
+        value: this.$store.state.web3.web3Instance().toWei(0.1, 'ether'),
+        from: this.$store.state.web3.coinbase
+      }, (err, result) => {
+        if (err) {
+          console.log(err)
+          this.pending = false
+        }
+      })
+    },
     clickNumber (event) {
       console.log('BETTING ON NUMBER, AMOUNT', event.target.innerHTML, this.amount)
       this.winEvent = null
@@ -85,7 +158,7 @@ ul {
     grid-row-gap:25px;
 }
 li{
-    padding: 20px;
+    padding: 10px;
     margin-right: 5px;
     border-radius: 50%;
     cursor: pointer;
