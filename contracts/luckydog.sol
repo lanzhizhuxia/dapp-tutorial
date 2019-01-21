@@ -62,18 +62,6 @@ Ownable
     ownerWallet = msg.sender;
   }
 
-
-  /**
-    * @dev Mints a new NFT.
-    */
-  function mint()
-  external payable
-
-  {
-    uint256 limitValue = 3 * LIMIT;
-    require(msg.value == limitValue, " The payment amount is wrong.");
-  }
-
   /**
    * @dev Mints a new NFT.
    */
@@ -209,7 +197,7 @@ Ownable
   }
 
   // 返回_owner拥有的所有card的id数组
-  function tokensOfOwner(address _owner) external view returns(uint256[] memory) {
+  function tokensOfAddress(address _owner) public view returns(uint256[] memory) {
     // 获得_owner拥有的数量
     require(_owner != address(0));
     uint256 tokenCount = _getOwnerNFTCount(_owner);
@@ -244,6 +232,13 @@ Ownable
       // 返回result
       return result;
     }
+  }
+
+  // 返回sender拥有的所有card的id数组
+  function tokensOfOwner() external view returns(uint256[] memory) {
+    // 获得sender拥有的数量
+    return tokensOfAddress(msg.sender);
+
   }
 
   /**
@@ -286,7 +281,7 @@ Ownable
       } else if(countG<countR&&countG<countB){
         res= "GREEN";
       } else{
-        res= "No winner";
+        res= "LuckyDog";
       }
     }else{
       //多数派原则
@@ -298,7 +293,7 @@ Ownable
       } else if(countG>countR&&countG>countB){
         res= "GREEN";
       } else{
-        res= "No winner";
+        res= "LuckyDog";
       }
 
     }
