@@ -3,6 +3,7 @@
     <h1>欢迎来到幸运儿~</h1>
     <h2>奖池总金额：{{ contractBalanceOf }}</h2>
     目前获胜方：{{ winner }}
+    <i class="el-icon-refresh" v-on:click="tokensOfOwner"></i>
     <el-collapse>
       <el-collapse-item title="游戏规则" name="1">
         <div>1.红蓝绿三方每方发行101张卡片，共303张，每张卡片售卖1ETH.</div>
@@ -230,15 +231,20 @@ export default {
     },
     tokensOfOwner () {
       var self = this;
+      console.log('tokensOfOwner')
+      // self.winEvent = null
+      // self.pending = true
       this.$store.state.contractInstance().tokensOfOwner.call(function (error, result) {
         if (error) {
           // error handle
           console.log('could not get event tokensOfOwner()')
         } else {
-          console.log('11111111111'+result)
+          // self.pending = false
+          console.log(result)
           //数组的forEach方法，相对for循环语法更简单
           self.items = []
           result.forEach(card => {
+            console.log(card)
             self.cardList.push({
               'cardId': parseInt(card, 10)
             })
@@ -342,9 +348,6 @@ export default {
       this.balanceOf ()
       this.getContractBalanceOf ()
     },
-    test () {
-      console.log('11111111111')
-    },
     clickNumber (event) {
       console.log('BETTING ON NUMBER, AMOUNT', event.target.innerHTML, this.amount)
       this.winEvent = null
@@ -378,7 +381,7 @@ export default {
 
     setInterval(() => {
       this.refresh()
-    }, 3000)
+    }, 4000)
 
   }
 }
