@@ -3,7 +3,19 @@
     <h1>欢迎来到幸运儿~</h1>
     <h2>奖池总金额：{{ contractBalanceOf }}</h2>
     目前获胜方：{{ winner }}
-    <i class="el-icon-refresh" v-on:click="refresh"></i>
+    <el-collapse>
+      <el-collapse-item title="游戏规则" name="1">
+        <div>1.红蓝绿三方每方发行101张卡片，共303张，每张卡片售卖1ETH.</div>
+        <div>2.用户可以购买任意一方的卡片成为其股东，所花费的资金进入奖池。</div>
+        <div>3.用户可以销毁持有的卡片，销毁后该方流通数量-1，销毁数量+1.</div>
+        <div>4.游戏结束后，如果你持有获胜方的卡片，按份额领取奖金。</div>
+      </el-collapse-item>
+      <el-collapse-item title="获胜规则" name="2">
+        <div>1.如果发行数量最高的一方不到50枚（包含50），则流通数量最高的获胜。</div>
+        <div>2.如果发行数量最高的一方超出50枚，，则流通数量最低的获胜。</div>
+        <div>3.如果出现某两方的流通数量相等，则幸运儿（LuckyDog）获胜。</div>
+      </el-collapse-item>
+    </el-collapse>
     <el-table
       :data="tableData"
       style="width: 100%">
@@ -19,7 +31,7 @@
         width="180">
         <template slot-scope="scope">
           <div slot="reference" class="name-wrapper">
-            <el-tag size="medium">{{ scope.row.count }}</el-tag>
+            <el-tag type="warning" size="medium">{{ scope.row.count }}</el-tag>
           </div>
         </template>
       </el-table-column>
@@ -28,7 +40,7 @@
         width="180">
         <template slot-scope="scope">
           <div slot="reference" class="name-wrapper">
-            <el-tag size="medium">{{ scope.row.burnCount }}</el-tag>
+            <el-tag type="danger" size="medium">{{ scope.row.burnCount }}</el-tag>
           </div>
         </template>
       </el-table-column>
@@ -43,7 +55,7 @@
     您拥有的卡的数量：{{ balanceCard }}
     想销毁的卡片Id： <input v-model="cardId"><el-button @click="burn()" type="danger" icon="el-icon-delete" circle></el-button>
     <ul>
-      <li :is="item.component" :text="item.text" v-for="item in items" ></li>
+      <li :is="item.component" :text="item.text" v-for="item in items" :key="item.id"></li>
     </ul>
     <img v-if="pending" id="loader" src="https://loading.io/spinners/double-ring/lg.double-ring-spinner.gif">
     <div class="event" v-if="winEvent">
@@ -83,7 +95,7 @@ export default {
       pending: false,
       winEvent: null,
       balanceCard: 0,
-      contractBalanceOf:0,
+      contractBalanceOf:'loading',
       winner: 'LuckyDog',
       items: [],
       cardList:[],
@@ -102,23 +114,23 @@ export default {
       }]
     }
   },
-  mounted: function(){
-    console.log('1111111111111111111')
-  },
   methods: {
     redAdd(component, text) {
+      console.log('redAdd')
       this.items.push({
         'component': component,
         'text': text
       })
     },
     blueAdd(component, text) {
+      console.log('blueAdd')
       this.items.push({
         'component': component,
         'text': text
       })
     },
     greenAdd(component, text) {
+      console.log('greenAdd')
       this.items.push({
         'component': component,
         'text': text
@@ -130,7 +142,7 @@ export default {
       this.pending = true
       this.$store.state.contractInstance().mintBlue({
         gas: 300000,
-        value: this.$store.state.web3.web3Instance().toWei(0.1, 'ether'),
+        value: this.$store.state.web3.web3Instance().toWei(1, 'ether'),
         from: this.$store.state.web3.coinbase
       }, (err) => {
         if (err) {
@@ -145,7 +157,7 @@ export default {
       this.pending = true
       this.$store.state.contractInstance().mintRed({
         gas: 300000,
-        value: this.$store.state.web3.web3Instance().toWei(0.1, 'ether'),
+        value: this.$store.state.web3.web3Instance().toWei(1, 'ether'),
         from: this.$store.state.web3.coinbase
       }, (err, result) => {
         if (err) {
@@ -160,7 +172,7 @@ export default {
       this.pending = true
       this.$store.state.contractInstance().mintGreen({
         gas: 300000,
-        value: this.$store.state.web3.web3Instance().toWei(0.1, 'ether'),
+        value: this.$store.state.web3.web3Instance().toWei(1, 'ether'),
         from: this.$store.state.web3.coinbase
       }, (err, result) => {
         if (err) {
@@ -195,10 +207,6 @@ export default {
     },
     balanceOf () {
       var self = this;
-      console.log('balanceOf')
-      self.winEvent = null
-      self.pending = true
-      // this.balanceCard = 1111
       this.$store.state.contractInstance().balanceOf.call(this.$store.state.web3.coinbase, function (error, result) {
         if (error) {
           // error handle
@@ -211,42 +219,32 @@ export default {
     },
     getContractBalanceOf () {
       var self = this;
-      console.log('getContractBalanceOf')
-      self.winEvent = null
-      self.pending = true
-      // this.balanceCard = 1111
       this.$store.state.contractInstance().getContractBalanceOf.call(function (error, result) {
         if (error) {
           // error handle
           console.log('could not get event getContractBalanceOf()')
         } else {
           self.contractBalanceOf = self.$store.state.web3.web3Instance().fromWei(parseInt(result, 10), 'ether')
-          self.pending = false
         }
       })
     },
     tokensOfOwner () {
       var self = this;
-      console.log('tokensOfOwner')
-      self.winEvent = null
-      self.pending = true
-      // this.balanceCard = 1111
       this.$store.state.contractInstance().tokensOfOwner.call(function (error, result) {
         if (error) {
           // error handle
           console.log('could not get event tokensOfOwner()')
         } else {
-          self.pending = false
+          console.log('11111111111'+result)
           //数组的forEach方法，相对for循环语法更简单
-          self.cardList = result
-          self.cardList.forEach(card => {
-            console.log(card);
+          self.items = []
+          result.forEach(card => {
             self.cardList.push({
               'cardId': parseInt(card, 10)
             })
-            if(card<4){
+            if(card<102){
               self.redAdd('red-component',parseInt(card, 10))
-            } else if (card<7){
+            } else if (card<203){
               self.blueAdd('blue-component',parseInt(card, 10))
             }else {
               self.greenAdd('green-component',parseInt(card, 10))
@@ -257,112 +255,82 @@ export default {
     },
     countRed () {
       var self = this;
-      console.log('countRed')
-      self.winEvent = null
-      self.pending = true
       this.$store.state.contractInstance().countRed.call(function (error, result) {
         if (error) {
           // error handle
           console.log('could not get event countRed()')
         } else {
           self.tableData[0].count = parseInt(result, 10)
-          self.pending = false
         }
       })
     },
     countBlue () {
       var self = this;
-      console.log('countBlue')
-      self.winEvent = null
-      self.pending = true
       this.$store.state.contractInstance().countBlue.call(function (error, result) {
         if (error) {
           // error handle
           console.log('could not get event totalBlueBurn()')
         } else {
           self.tableData[1].count = parseInt(result, 10)
-          self.pending = false
         }
       })
     },
     countGreen () {
       var self = this;
-      console.log('countGreen')
-      self.winEvent = null
-      self.pending = true
       this.$store.state.contractInstance().countGreen.call(function (error, result) {
         if (error) {
           // error handle
           console.log('could not get event totalGreenBurn()')
         } else {
           self.tableData[2].count = parseInt(result, 10)
-          self.pending = false
         }
       })
     },
     totalRedBurn () {
       var self = this;
-      console.log('totalRedBurn')
-      self.winEvent = null
-      self.pending = true
       this.$store.state.contractInstance().totalRedBurn.call(function (error, result) {
         if (error) {
           // error handle
           console.log('could not get event totalRedBurn()')
         } else {
           self.tableData[0].burnCount = parseInt(result, 10)
-          self.pending = false
         }
       })
     },
     totalBlueBurn () {
       var self = this;
-      console.log('totalBlueBurn')
-      self.winEvent = null
-      self.pending = true
       this.$store.state.contractInstance().totalBlueBurn.call(function (error, result) {
         if (error) {
           // error handle
           console.log('could not get event totalBlueBurn()')
         } else {
           self.tableData[1].burnCount = parseInt(result, 10)
-          self.pending = false
         }
       })
     },
     totalGreenBurn () {
       var self = this;
-      console.log('totalGreenBurn')
-      self.winEvent = null
-      self.pending = true
       this.$store.state.contractInstance().totalGreenBurn.call(function (error, result) {
         if (error) {
           // error handle
           console.log('could not get event totalGreenBurn()')
         } else {
           self.tableData[2].burnCount = parseInt(result, 10)
-          self.pending = false
         }
       })
     },
     checkWinner () {
       var self = this;
-      console.log('checkWinner')
-      self.winEvent = null
-      self.pending = true
       this.$store.state.contractInstance().checkWinner.call(function (error, result) {
         if (error) {
           // error handle
           console.log('could not get event checkWinner()')
         } else {
           self.winner = result
-          self.pending = false
         }
       })
     },
     refresh () {
-      this.balanceOf ()
-      this.getContractBalanceOf ()
       this.checkWinner ()
       this.countBlue()
       this.countGreen()
@@ -371,6 +339,11 @@ export default {
       this.totalGreenBurn()
       this.totalRedBurn()
       this.tokensOfOwner()
+      this.balanceOf ()
+      this.getContractBalanceOf ()
+    },
+    test () {
+      console.log('11111111111')
     },
     clickNumber (event) {
       console.log('BETTING ON NUMBER, AMOUNT', event.target.innerHTML, this.amount)
@@ -402,6 +375,11 @@ export default {
   mounted () {
     console.log('dispatching getContractInstance')
     this.$store.dispatch('getContractInstance')
+
+    setInterval(() => {
+      this.refresh()
+    }, 3000)
+
   }
 }
 </script>

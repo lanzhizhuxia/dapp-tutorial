@@ -19,19 +19,19 @@ Ownable
 
   uint256 private constant LIMIT  = 10 ** uint256(decimals);
   // 锻造上限
-  uint8 private constant PRIVATE_SALE_AMOUNT = 3;
+  uint8 private constant PRIVATE_SALE_AMOUNT = 101;
   // 所有锻造RED总数
   uint public totalRedSalesReleased = 0;
   // 所有销毁RED总数
   uint public totalRedBurn;
 
   // 所有锻造BLUE总数
-  uint public totalBlueSalesReleased = 3;
+  uint public totalBlueSalesReleased = 101;
   // 所有销毁BLUE总数
   uint public totalBlueBurn;
 
   // 所有锻造GREEN总数
-  uint public totalGreenSalesReleased = 6;
+  uint public totalGreenSalesReleased = 202;
   // 所有销毁GREEN总数
   uint public totalGreenBurn;
 
@@ -70,8 +70,9 @@ Ownable
 
   {
     // 计算折扣后实际 token 数量
-    uint256 limitValue = 1 * LIMIT / 10;
+    uint256 limitValue = 1 * LIMIT;
     require(msg.value == limitValue, " The payment amount is wrong.");
+    require(!isPrivateSaleFinished(), "The game has ended");
 
     // 检查发行上限
     totalRedSalesReleased = totalRedSalesReleased.add(1);
@@ -94,8 +95,9 @@ Ownable
 
   {
     // 计算折扣后实际 token 数量
-    uint256 limitValue = 1 * LIMIT / 10;
+    uint256 limitValue = 1 * LIMIT;
     require(msg.value == limitValue, " The payment amount is wrong.");
+    require(!isPrivateSaleFinished(), "The game has ended");
 
     // 检查发行上限
     totalBlueSalesReleased = totalBlueSalesReleased.add(1);
@@ -117,8 +119,9 @@ Ownable
 
   {
     // 计算折扣后实际 token 数量
-    uint256 limitValue = 1 * LIMIT / 10;
+    uint256 limitValue = 1 * LIMIT;
     require(msg.value == limitValue, " The payment amount is wrong.");
+    require(!isPrivateSaleFinished(), "The game has ended");
 
     // 检查发行上限
     totalGreenSalesReleased = totalGreenSalesReleased.add(1);
@@ -142,6 +145,8 @@ Ownable
   external
   canOperate(_tokenId)
   {
+
+    require(!isPrivateSaleFinished(), "The game has ended");
 
     _burn(_tokenId);
 
@@ -180,7 +185,7 @@ Ownable
   returns (uint256)
   {
 
-    return totalBlueSalesReleased - totalBlueBurn -3;
+    return totalBlueSalesReleased - totalBlueBurn -101;
   }
 
   /**
@@ -193,7 +198,7 @@ Ownable
   returns (uint256)
   {
 
-    return totalGreenSalesReleased - totalGreenBurn - 6;
+    return totalGreenSalesReleased - totalGreenBurn - 202;
   }
 
   // 返回_owner拥有的所有card的id数组
@@ -273,7 +278,7 @@ Ownable
 
 
     // 有一方票数过半触发少数派原则
-    if(countR>2||countB>2||countG>2){
+    if(countR>50||countB>50||countG>50){
       if(countR<countB&&countR<countG){
         res= "RED";
       } else if(countB<countR&&countB<countG){
@@ -310,6 +315,8 @@ Ownable
   function investmentDividend() public payable onlyOwner {
 
 
+    require(isPrivateSaleFinished(), "The game is not over yet.");
+
     uint countR = countRed();
     uint countB = countBlue();
     uint countG = countGreen();
@@ -318,7 +325,7 @@ Ownable
     uint dividendUnits;
 
 
-    if(countR>2||countB>2||countG>2){
+    if(countR>50||countB>50||countG>50){
       if(countR<countB&&countR<countG){
         //RED win
         dividendUnits=dividend/countR;

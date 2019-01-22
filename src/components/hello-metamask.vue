@@ -1,10 +1,6 @@
 <template>
   <div class='metamask-info'>
-    <p v-if="isInjected" id="has-metamask"><i aria-hidden="true" class="fa fa-check"></i> Metamask installed</p>
-    <p v-else id="no-metamask"><i aria-hidden="true" class="fa fa-times"></i> Metamask not found</p>
-    <p>Network: {{ network }}</p>
-    <p>Account: {{ coinbase }}</p>
-    <p>Balance: {{ balance }} Wei // {{ ethBalance }} Eth</p>
+    <p>{{ coinbase }}   :   {{ ethBalance }} Eth</p>
   </div>
 </template>
 
