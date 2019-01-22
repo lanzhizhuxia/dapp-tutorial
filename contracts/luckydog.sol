@@ -19,19 +19,19 @@ Ownable
 
   uint256 private constant LIMIT  = 10 ** uint256(decimals);
   // 锻造上限
-  uint8 private constant PRIVATE_SALE_AMOUNT = 101;
+  uint private constant PRIVATE_SALE_AMOUNT = 1001;
   // 所有锻造RED总数
   uint public totalRedSalesReleased = 0;
   // 所有销毁RED总数
   uint public totalRedBurn;
 
   // 所有锻造BLUE总数
-  uint public totalBlueSalesReleased = 101;
+  uint public totalBlueSalesReleased = 1001;
   // 所有销毁BLUE总数
   uint public totalBlueBurn;
 
   // 所有锻造GREEN总数
-  uint public totalGreenSalesReleased = 202;
+  uint public totalGreenSalesReleased = 2002;
   // 所有销毁GREEN总数
   uint public totalGreenBurn;
 
@@ -70,7 +70,7 @@ Ownable
 
   {
     // 计算折扣后实际 token 数量
-    uint256 limitValue = 1 * LIMIT;
+    uint256 limitValue = 1 * LIMIT /10;
     require(msg.value == limitValue, " The payment amount is wrong.");
     require(!isPrivateSaleFinished(), "The game has ended");
 
@@ -88,6 +88,34 @@ Ownable
   }
 
   /**
+ * @dev Mints a new NFT.
+ */
+  function mintReds(uint count)
+  external payable
+
+  {
+    // 计算折扣后实际 token 数量
+    uint256 limitValue = count * LIMIT /10;
+    require(msg.value == limitValue, " The payment amount is wrong.");
+    require(!isPrivateSaleFinished(), "The game has ended");
+
+    // 检查发行上限
+    uint tmp = totalRedSalesReleased.add(count);
+    require(tmp <= PRIVATE_SALE_AMOUNT, "Mint exceeded limitation.");
+
+    // 从1开始循环遍历所有
+    for (uint i = 1; i <= count; i++) {
+      totalRedSalesReleased = totalRedSalesReleased.add(1);
+      _mint(msg.sender, totalRedSalesReleased);
+      _setTokenUri(totalRedSalesReleased, "RED");
+      totalTokens = totalTokens.add(1);
+      //address(this).send(msg.value);
+      lastUser = msg.sender;
+    }
+
+  }
+
+  /**
    * @dev Mints a new NFT.
    */
   function mintBlue()
@@ -95,7 +123,7 @@ Ownable
 
   {
     // 计算折扣后实际 token 数量
-    uint256 limitValue = 1 * LIMIT;
+    uint256 limitValue = 1 * LIMIT /10;
     require(msg.value == limitValue, " The payment amount is wrong.");
     require(!isPrivateSaleFinished(), "The game has ended");
 
@@ -114,12 +142,40 @@ Ownable
   /**
   * @dev Mints a new NFT.
   */
+  function mintBlues(uint count)
+  external payable
+
+  {
+    // 计算折扣后实际 token 数量
+    uint256 limitValue = count * LIMIT /10;
+    require(msg.value == limitValue, " The payment amount is wrong.");
+    require(!isPrivateSaleFinished(), "The game has ended");
+
+    // 检查发行上限
+    uint tmp = totalBlueSalesReleased.add(count);
+    require(tmp <= 2*PRIVATE_SALE_AMOUNT, "Mint exceeded limitation.");
+
+    // 从1开始循环遍历所有
+    for (uint i = 1; i <= count; i++) {
+      totalBlueSalesReleased = totalBlueSalesReleased.add(1);
+      _mint(msg.sender, totalBlueSalesReleased);
+      _setTokenUri(totalBlueSalesReleased, "BLUE");
+      totalTokens = totalTokens.add(1);
+      //address(this).send(msg.value);
+      lastUser = msg.sender;
+    }
+
+  }
+
+  /**
+  * @dev Mints a new NFT.
+  */
   function mintGreen()
   external payable
 
   {
     // 计算折扣后实际 token 数量
-    uint256 limitValue = 1 * LIMIT;
+    uint256 limitValue = 1 * LIMIT /10;
     require(msg.value == limitValue, " The payment amount is wrong.");
     require(!isPrivateSaleFinished(), "The game has ended");
 
@@ -132,6 +188,34 @@ Ownable
     totalTokens = totalTokens.add(1);
     lastUser = msg.sender;
 
+
+  }
+
+  /**
+  * @dev Mints a new NFT.
+  */
+  function mintGreens(uint count)
+  external payable
+
+  {
+    // 计算折扣后实际 token 数量
+    uint256 limitValue = count * LIMIT /10;
+    require(msg.value == limitValue, " The payment amount is wrong.");
+    require(!isPrivateSaleFinished(), "The game has ended");
+
+    // 检查发行上限
+    uint tmp = totalGreenSalesReleased.add(count);
+    require(tmp <= 3*PRIVATE_SALE_AMOUNT, "Mint exceeded limitation.");
+
+    // 从1开始循环遍历所有
+    for (uint i = 1; i <= count; i++) {
+      totalGreenSalesReleased = totalGreenSalesReleased.add(1);
+      _mint(msg.sender, totalGreenSalesReleased);
+      _setTokenUri(totalGreenSalesReleased, "GREEN");
+      totalTokens = totalTokens.add(1);
+      //address(this).send(msg.value);
+      lastUser = msg.sender;
+    }
 
   }
 
@@ -185,7 +269,7 @@ Ownable
   returns (uint256)
   {
 
-    return totalBlueSalesReleased - totalBlueBurn -101;
+    return totalBlueSalesReleased - totalBlueBurn -1001;
   }
 
   /**
@@ -198,7 +282,7 @@ Ownable
   returns (uint256)
   {
 
-    return totalGreenSalesReleased - totalGreenBurn - 202;
+    return totalGreenSalesReleased - totalGreenBurn - 2002;
   }
 
   // 返回_owner拥有的所有card的id数组
@@ -278,7 +362,7 @@ Ownable
 
 
     // 有一方票数过半触发少数派原则
-    if(countR>50||countB>50||countG>50){
+    if(countR>500||countB>500||countG>500){
       if(countR<countB&&countR<countG){
         res= "RED";
       } else if(countB<countR&&countB<countG){
@@ -325,7 +409,7 @@ Ownable
     uint dividendUnits;
 
 
-    if(countR>50||countB>50||countG>50){
+    if(countR>500||countB>500||countG>500){
       if(countR<countB&&countR<countG){
         //RED win
         dividendUnits=dividend/countR;

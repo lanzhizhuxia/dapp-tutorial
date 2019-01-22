@@ -1,59 +1,74 @@
 <template>
   <div class="casino container">
     <h1>欢迎来到幸运儿~</h1>
-    <h2>奖池总金额：{{ contractBalanceOf }}</h2>
+    <h2>奖池总金额：{{ contractBalanceOf }} ETH</h2>
     目前获胜方：{{ winner }}
-    <i class="el-icon-refresh" v-on:click="tokensOfOwner"></i>
+    <i class="el-icon-refresh" v-on:click="refresh"></i>
     <el-collapse>
       <el-collapse-item title="游戏规则" name="1">
-        <div>1.红蓝绿三方每方发行101张卡片，共303张，每张卡片售卖1ETH.</div>
+        <div>1.红蓝绿三方每方发行1001张卡片，共3003张，每张卡片售卖0.1ETH.</div>
         <div>2.用户可以购买任意一方的卡片成为其股东，所花费的资金进入奖池。</div>
         <div>3.用户可以销毁持有的卡片，销毁后该方流通数量-1，销毁数量+1.</div>
         <div>4.游戏结束后，如果你持有获胜方的卡片，按份额领取奖金。</div>
+        <div>5.当所有卡片售卖完成或者一周倒计时完成，则游戏结束。</div>
       </el-collapse-item>
       <el-collapse-item title="获胜规则" name="2">
-        <div>1.如果发行数量最高的一方不到50枚（包含50），则流通数量最高的获胜。</div>
-        <div>2.如果发行数量最高的一方超出50枚，，则流通数量最低的获胜。</div>
-        <div>3.如果出现某两方的流通数量相等，则幸运儿（LuckyDog）获胜。</div>
+        <div>1.如果发行数量最高的一方不到500枚（包含500），则流通数量最高的获胜。</div>
+        <div>2.如果发行数量最高的一方超出500枚，，则流通数量最低的获胜。</div>
+        <div>3.如果出现某两方的流通数量相等，则幸运儿（LuckyDog）获胜独享所有奖金。</div>
+        <div>4.如何成为幸运儿？在游戏结束前，最后一个执行购买或者销毁的账户成为幸运儿。</div>
+      </el-collapse-item>
+      <el-collapse-item title="购买及数据" name="3">
+        您拥有的卡的数量：{{ balanceCard }}
+        <template>
+          <div class="block">
+            <el-slider
+              :min=1
+              :max=20
+              v-model="count"
+              input-size="mini"
+              show-input>
+            </el-slider>
+          </div>
+        </template>
+        <el-table
+          :data="tableData"
+          style="width: 100%">
+          <el-table-column
+            label="阵营"
+            width="180">
+            <template slot-scope="scope">
+              <span style="margin-left: 10px">{{ scope.row.date }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="流通数量"
+            width="180">
+            <template slot-scope="scope">
+              <div slot="reference" class="name-wrapper">
+                <el-tag type="warning" size="medium">{{ scope.row.count }}</el-tag>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="销毁数量"
+            width="180">
+            <template slot-scope="scope">
+              <div slot="reference" class="name-wrapper">
+                <el-tag type="danger" size="medium">{{ scope.row.burnCount }}</el-tag>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作">
+            <template slot-scope="scope">
+              <el-button
+                size="mini"
+                @click="handleMint(scope.$index, scope.row)">购买</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
       </el-collapse-item>
     </el-collapse>
-    <el-table
-      :data="tableData"
-      style="width: 100%">
-      <el-table-column
-        label="阵营"
-        width="180">
-        <template slot-scope="scope">
-          <span style="margin-left: 10px">{{ scope.row.date }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column
-        label="流通数量"
-        width="180">
-        <template slot-scope="scope">
-          <div slot="reference" class="name-wrapper">
-            <el-tag type="warning" size="medium">{{ scope.row.count }}</el-tag>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column
-        label="销毁数量"
-        width="180">
-        <template slot-scope="scope">
-          <div slot="reference" class="name-wrapper">
-            <el-tag type="danger" size="medium">{{ scope.row.burnCount }}</el-tag>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作">
-        <template slot-scope="scope">
-          <el-button
-            size="mini"
-            @click="handleMint(scope.$index, scope.row)">购买</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    您拥有的卡的数量：{{ balanceCard }}
     想销毁的卡片Id： <input v-model="cardId"><el-button @click="burn()" type="danger" icon="el-icon-delete" circle></el-button>
     <ul>
       <li :is="item.component" :text="item.text" v-for="item in items" :key="item.id"></li>
@@ -92,6 +107,7 @@ export default {
   },
   data () {
     return {
+      count: 0,
       cardId: null,
       pending: false,
       winEvent: null,
@@ -117,7 +133,6 @@ export default {
   },
   methods: {
     redAdd(component, text) {
-      console.log('redAdd')
       this.items.push({
         'component': component,
         'text': text
@@ -141,9 +156,10 @@ export default {
       console.log('mintBlue')
       this.winEvent = null
       this.pending = true
-      this.$store.state.contractInstance().mintBlue({
-        gas: 300000,
-        value: this.$store.state.web3.web3Instance().toWei(1, 'ether'),
+      let eth = 0.1*this.count;
+      this.$store.state.contractInstance().mintBlues(this.count, {
+        gas: 3000000,
+        value: this.$store.state.web3.web3Instance().toWei(eth, 'ether'),
         from: this.$store.state.web3.coinbase
       }, (err) => {
         if (err) {
@@ -156,9 +172,10 @@ export default {
       console.log('mintRed')
       this.winEvent = null
       this.pending = true
-      this.$store.state.contractInstance().mintRed({
-        gas: 300000,
-        value: this.$store.state.web3.web3Instance().toWei(1, 'ether'),
+      let eth = 0.1*this.count;
+      this.$store.state.contractInstance().mintReds(this.count, {
+        gas: 3000000,
+        value: this.$store.state.web3.web3Instance().toWei(eth, 'ether'),
         from: this.$store.state.web3.coinbase
       }, (err, result) => {
         if (err) {
@@ -171,9 +188,10 @@ export default {
       console.log('mintGreen')
       this.winEvent = null
       this.pending = true
-      this.$store.state.contractInstance().mintGreen({
-        gas: 300000,
-        value: this.$store.state.web3.web3Instance().toWei(1, 'ether'),
+      let eth = 0.1*this.count;
+      this.$store.state.contractInstance().mintGreens(this.count, {
+        gas: 3000000,
+        value: this.$store.state.web3.web3Instance().toWei(eth, 'ether'),
         from: this.$store.state.web3.coinbase
       }, (err, result) => {
         if (err) {
@@ -231,26 +249,23 @@ export default {
     },
     tokensOfOwner () {
       var self = this;
-      console.log('tokensOfOwner')
       // self.winEvent = null
       // self.pending = true
-      this.$store.state.contractInstance().tokensOfOwner.call(function (error, result) {
+      this.$store.state.contractInstance().tokensOfAddress.call(this.$store.state.web3.coinbase, function (error, result) {
         if (error) {
           // error handle
           console.log('could not get event tokensOfOwner()')
         } else {
           // self.pending = false
-          console.log(result)
           //数组的forEach方法，相对for循环语法更简单
           self.items = []
           result.forEach(card => {
-            console.log(card)
             self.cardList.push({
               'cardId': parseInt(card, 10)
             })
-            if(card<102){
+            if(card<1002){
               self.redAdd('red-component',parseInt(card, 10))
-            } else if (card<203){
+            } else if (card<2003){
               self.blueAdd('blue-component',parseInt(card, 10))
             }else {
               self.greenAdd('green-component',parseInt(card, 10))
@@ -381,7 +396,7 @@ export default {
 
     setInterval(() => {
       this.refresh()
-    }, 4000)
+    }, 10000)
 
   }
 }
@@ -395,32 +410,6 @@ export default {
 }
 #loader {
   width:150px;
-}
-ul {
-    margin: 25px;
-    list-style-type: none;
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    grid-column-gap:25px;
-    grid-row-gap:25px;
-}
-li{
-    padding: 10px;
-    margin-right: 5px;
-    border-radius: 50%;
-    cursor: pointer;
-    background-color:#fff;
-    border: -2px solid #bf0d9b;
-    color: #bf0d9b;
-    box-shadow:3px 5px #bf0d9b;
-}
-li:hover{
-    background-color:#bf0d9b;
-    color:white;
-    box-shadow:0px 0px #bf0d9b;
-}
-li:active{
-    opacity: 0.7;
 }
 *{
    color: #444444;

@@ -1,4 +1,4 @@
-const address = '0xff230e6ec9966cce1048cd0e12f59471db15f7c3'
+const address = '0x95dd759a3c4d68dc47cdd677731273533b99f330'
 const ABI = [
   {
     "constant": false,
@@ -52,6 +52,20 @@ const ABI = [
   },
   {
     "constant": false,
+    "inputs": [
+      {
+        "name": "count",
+        "type": "uint256"
+      }
+    ],
+    "name": "mintBlues",
+    "outputs": [],
+    "payable": true,
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "constant": false,
     "inputs": [],
     "name": "mintGreen",
     "outputs": [],
@@ -61,8 +75,36 @@ const ABI = [
   },
   {
     "constant": false,
+    "inputs": [
+      {
+        "name": "count",
+        "type": "uint256"
+      }
+    ],
+    "name": "mintGreens",
+    "outputs": [],
+    "payable": true,
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "constant": false,
     "inputs": [],
     "name": "mintRed",
+    "outputs": [],
+    "payable": true,
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "count",
+        "type": "uint256"
+      }
+    ],
+    "name": "mintReds",
     "outputs": [],
     "payable": true,
     "stateMutability": "payable",
